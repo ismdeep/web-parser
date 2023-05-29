@@ -113,3 +113,32 @@ func GetVideoInfo(videoID string) (*VideoInfo, error) {
 
 	return &info, nil
 }
+
+// GetVideoIDListByHomePageURL get video id list by home page url
+func GetVideoIDListByHomePageURL(url string) ([]string, error) {
+	doc, err := httpdoc.GetHTMLNode(url)
+	if err != nil {
+		return nil, err
+	}
+
+	exists := make(map[string]bool)
+
+	var lst []string
+	content := htmlquery.InnerText(doc)
+	for {
+		index := strings.Index(content, `"videoId":"`)
+		if index < 0 {
+			break
+		}
+
+		content = content[index+len(`"videoId":"`):]
+		videoID := content[:strings.Index(content, `"`)]
+		if _, ok := exists[videoID]; !ok {
+			lst = append(lst, videoID)
+			exists[videoID] = true
+		}
+
+	}
+
+	return lst, nil
+}

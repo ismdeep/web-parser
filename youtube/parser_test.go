@@ -26,3 +26,10 @@ func TestGetVideoInfo(t *testing.T) {
 	t.Logf("ChannelID = %v", info.ChannelID)
 	t.Logf("LengthSeconds = %v", info.LengthSeconds)
 }
+
+func TestGetVideoIDListByHomePageURL(t *testing.T) {
+	videoIDLst, err := GetVideoIDListByHomePageURL("https://www.youtube.com/@helloworld-cn")
+	assert.NoError(t, err)
+	assert.Greater(t, len(videoIDLst), 0)
+	t.Logf("video lst len = %v", len(videoIDLst))
+}
