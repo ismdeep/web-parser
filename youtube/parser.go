@@ -2,6 +2,8 @@ package youtube
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
@@ -44,6 +46,70 @@ func GetChannelInfoByHomePageURL(url string) (*ChannelInfo, error) {
 		return nil, errors.New("rss not found")
 	}
 	info.RSSLink = htmlquery.InnerText(rss)
+
+	return &info, nil
+}
+
+// VideoInfo YouTube video info struct
+type VideoInfo struct {
+	ID            string
+	URL           string
+	Title         string
+	Description   string
+	DatePublished string
+	ChannelID     string
+	LengthSeconds int
+}
+
+// GetVideoInfo get video info
+func GetVideoInfo(videoID string) (*VideoInfo, error) {
+	doc, err := httpdoc.GetHTMLNode(fmt.Sprintf("https://www.youtube.com/watch?v=%v", videoID))
+	if err != nil {
+		return nil, err
+	}
+
+	var info VideoInfo
+	info.ID = videoID
+
+	ogURL := htmlquery.FindOne(doc, `//meta[@property="og:url"]/@content`)
+	if ogURL == nil {
+		return nil, errors.New("og:url not found")
+	}
+	info.URL = htmlquery.InnerText(ogURL)
+
+	title := htmlquery.FindOne(doc, `//meta[@name="title"]/@content`)
+	if title == nil {
+		return nil, errors.New("title not found")
+	}
+	info.Title = htmlquery.InnerText(title)
+
+	description := htmlquery.FindOne(doc, `//meta[@property="og:description"]/@content`)
+	if description == nil {
+		return nil, errors.New("og:description not found")
+	}
+	info.Description = htmlquery.InnerText(description)
+
+	datePublished := htmlquery.FindOne(doc, `//meta[@itemprop="datePublished"]/@content`)
+	if datePublished == nil {
+		return nil, errors.New("datePublished not found")
+	}
+	info.DatePublished = htmlquery.InnerText(datePublished)
+
+	content := htmlquery.InnerText(doc)
+	index := strings.Index(content, `,"subscribeEndpoint":{"channelIds":["`)
+	if index < 0 {
+		return nil, errors.New("channel id not found")
+	}
+	channelID := content[index+len(`,"subscribeEndpoint":{"channelIds":["`):]
+	info.ChannelID = channelID[:strings.Index(channelID, `"`)]
+
+	lengthSeconds := content[strings.Index(content, `},"lengthSeconds":"`)+len(`},"lengthSeconds":"`):]
+	lengthSeconds = lengthSeconds[:strings.Index(lengthSeconds, `"`)]
+	lengthSecondsInt, err := strconv.ParseInt(lengthSeconds, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	info.LengthSeconds = int(lengthSecondsInt)
 
 	return &info, nil
 }
