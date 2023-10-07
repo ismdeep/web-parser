@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,15 +17,19 @@ func TestGetChannelInfoByHomePageURL(t *testing.T) {
 }
 
 func TestGetVideoInfo(t *testing.T) {
-	info, err := GetVideoInfo("peJKnbkJaF8")
+	info, err := GetVideoInfo("NP08uUsHFkA")
 	assert.NoError(t, err)
-	t.Logf("ID = %v", info.ID)
-	t.Logf("URL = %v", info.URL)
-	t.Logf("Title = %v", info.Title)
-	t.Logf("Description = %v", info.Description)
-	t.Logf("DatePublished = %v", info.DatePublished)
-	t.Logf("ChannelID = %v", info.ChannelID)
-	t.Logf("LengthSeconds = %v", info.LengthSeconds)
+	if info != nil {
+		t.Logf("ID = %v", info.ID)
+		t.Logf("URL = %v", info.URL)
+		t.Logf("Title = %v", info.Title)
+		t.Logf("Description = %v", info.Description)
+		loc, err := time.LoadLocation("Asia/Shanghai")
+		assert.NoError(t, err)
+		t.Logf("DatePublished = %v", info.DatePublished.In(loc).Format(time.RFC3339))
+		t.Logf("ChannelID = %v", info.ChannelID)
+		t.Logf("LengthSeconds = %v", info.LengthSeconds)
+	}
 }
 
 func TestGetVideoIDListByHomePageURL(t *testing.T) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/antchfx/htmlquery"
 
@@ -56,7 +57,7 @@ type VideoInfo struct {
 	URL           string
 	Title         string
 	Description   string
-	DatePublished string
+	DatePublished time.Time
 	ChannelID     string
 	LengthSeconds int
 }
@@ -93,7 +94,11 @@ func GetVideoInfo(videoID string) (*VideoInfo, error) {
 	if datePublished == nil {
 		return nil, errors.New("datePublished not found")
 	}
-	info.DatePublished = htmlquery.InnerText(datePublished)
+	dpTime, err := time.Parse(time.RFC3339, htmlquery.InnerText(datePublished))
+	if err != nil {
+		return nil, err
+	}
+	info.DatePublished = dpTime
 
 	content := htmlquery.InnerText(doc)
 	index := strings.Index(content, `,"subscribeEndpoint":{"channelIds":["`)
